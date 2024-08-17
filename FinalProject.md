@@ -1,19 +1,62 @@
 ## This hands-on solving Final Project: 
+# BlogDjango
+BlogDjango
 
-# All steps:
- STEP 1: Create VPC
- STEP 2: Create an internet gateway named 'final-project-ig'
- STEP 3: Create Subnets
- STEP 4: Route Tables
- STEP 5: Creating Security Groups
- STEP 6: Creating RDS Instance
- STEP 7: Create NAT Instance
- STEP 8: Creating a private EC2 Instance with bootstrap script that installs Wordpress
- STEP 9: Port Forwarding on NAT Instance
- STEP 10: Create a target group
- STEP 11: Creating Application Load Balancer together with Target Group
+## Description
+
+The TechPro Education Blog Page Application aims to deploy blog application as a web application written Django Framework on AWS Cloud Infrastructure. This infrastructure has Application Load Balancer with Auto Scaling Group of Elastic Compute Cloud (EC2) Instances and Relational Database Service (RDS) on defined VPC. Also, The Cloudfront and Route 53 services are located in front of the architecture and manage the traffic in secure. User is able to upload pictures and videos on own blog page and these are kept on S3 Bucket. This architecture will be created by Firms DevOps Guy.
+
+## Problem Statement
+
+- Your company has recently ended up a project that aims to serve as Blog web application on isolated VPC environment. You and your colleagues have started to work on the project. Your Developer team has developed the application and you are going to deploy the app in production environment.
+
+- Application is coded by TechPro Education Fullstack development team and given you as DevOps team. App allows users to write their own blog page to whom user registration data should be kept in separate MySQL database in AWS RDS service and pictures or videos should be kept in S3 bucket. The object list of S3 Bucket containing movies and videos is recorded on DynamoDB table. 
+
+- The web application will be deployed using Django framework.
+
+- The Web Application should be accessible via web browser from anywhere in secure.
+
+- You are requested to push your program to the project repository on the Github. You are going to pull it into the webservers in the production environment on AWS Cloud. 
+
+In the architecture, you can configure your infrastructure using the followings,
+
+# Blog Project Tasks
+
+## Infrastructure Setup
+
+1. **Create VPC and all components**
+   - Create VPC
+   - Create and attach an internet gateway
+   - Create Subnets
+   - Create Route Tables
+   - Create Endpoint
+
+2. **Create Security Groups (ALB ---> EC2 ---> RDS)**
+   - ALB Security Group
+   - EC2 Security Groups
+   - RDS Security Groups
+   - NAT Instance Security Group
+
+3. **Create RDS**
+   - Create a subnet group for our custom VPC
+   - Create Database
+     - Database engine: `MySQL`
+     - Version: `8.0.35`
+
+4. **Create two S3 Bucket** 
+5. **GITHUB**
+6. **Create NAT Instance**
+7. **Create Target Group**
+8. **Create Application Load Balancer**
+9. **Create IAM roles**
+10. **Launch Template Configuration**
+11. **Create Auto Scaling Group**
+12. **Create CloudFront Distribution**
+13. **Creating fail-over routing policies**
+14. **Create a Lambda Function and Trigger Event**
 
 
+## PART 1  -----------------------------> **Create VPC and all components**  ----------------------------
 ### STEP 1: Create VPC
 
 - First, go to the VPC and select Your VPC section from the left-hand menu, click create VPC.
@@ -29,7 +72,7 @@
 ```
 - click create
 
-# enable DNS hostnames for the vpc 'vpcFP'
+- `IMPORTANT`:  enable DNS hostnames for the vpc 'vpcFP'
 
   - Select 'vpcFP' on VPC console ----> Actions ----> Edit VPc Settings ----> DNS settings, Enable DNS hostnames
   - Click save 
@@ -78,7 +121,7 @@ Availability Zone :us-east-1b
 IPv4 CIDR block   :10.0.12.0/24
 
 
-# enable Auto-Assign Public IPv4 Address for public subnets
+- `IMPORTANT`: enable Auto-Assign Public IPv4 Address for public subnets
 
 - Go to the Subnets from left hand menu
 
@@ -135,8 +178,8 @@ IPv4 CIDR block   :10.0.12.0/24
       - save routes 
 
 
-### STEP 3: Create Endpoint
-# A. Connect to S3 via Endpoint
+### STEP 5: Create Endpoint
+- Connect to S3 via Endpoint
 
 - click `Create Endpoint`
 ```text
@@ -149,32 +192,34 @@ Route Table      : fp-private-rt
 - Create Endpoint
 
 
-### STEP 5 - Creating Security Groups
+
+## PART 2  -----------------------------> **Create Security Groups (ALB ---> EC2 ---> RDS)**  ----------------------------
+### STEP 1 - Creating Security Groups
 
 1. Create security group for ALB
 Name: fp-alb-sg
 Inbound: Type: HTTP Port: 80 Source: Anywhere IPv4
-         Type: SSH Port: 22 Source: Anywhere IPv4
          Type: HTTPS Port: 443 Source: Anywhere IPv4
-         Type: All ICMP Port: all Source: Anywhere IPv4
 
 2. Create security group for NAT Instances
 Name: fp-nat-instance-sg
-Inbound: Type: HTTP Port: 80 Source: from fp-alb-sg
+Inbound: Type: All traffic Source: vpcFP
          Type: SSH Port: 22 Source: Anywhere IPv4
-         Type: HTTPS Port: 443 Source: from fp-alb-sg
 
 3. Create security group for private Instances
 Name: fp-ec2-sg
 Inbound: Type: HTTP Port: 80 Source: from fp-alb-sg
-         Type: SSH Port: 22 Source: Anywhere IPv4
          Type: HTTPS Port: 443 Source: from fp-alb-sg
+         Type: SSH Port: 22 Source: vpcFP
 
 4. Create security group for RDS
 Name: fp-rds-sg
 Inbound: Type: Mysql/Aurora Port: 3306 Source: fp-ec2-sg
 
-# - Creating Subnet groups for RDS
+
+
+## PART 3  -----------------------------> **Create RDS**  ----------------------------
+### STEP 1 - Creating Subnet groups for RDS
 
 - click to 'Create DB subnet group'
 - in 'Subnet group details':
@@ -187,27 +232,7 @@ Availability Zones choose:
 subnets:
   choose 2 private subnets
 
-
-# Part 3 - Create VPC Endpoint
-
-### A. Create S3 Bucket 
-
-- Go to the S3 service on AWS console
-- Create a bucket of `pf-s3-kendiadin` with following properties, 
-
-```bash
-
-Versioning                  : Disabled
-Server access logging       : Disabled
-Tagging                     : 0 Tags
-Object-level logging        : Disabled
-Default encryption          : Default
-CloudWatch request metrics  : Disabled
-Object lock                 : Disabled
-Block all public access     : unchecked
-```
-
-## STEP 6 - Creating RDS Instance
+### STEP 2 - Creating RDS Instance
 
 - Select Standard create as method,
 - Engine: MySQL
@@ -255,8 +280,116 @@ Maintenance window
 
 Click Create database
 
-### STEP 7 Create NAT Instance
 
+
+## PART 4 ------------------------------>  Create two S3 Bucket   <-----------------------
+### STEP 1
+- Go to the S3 service on AWS console
+- Create a bucket of `pf-s3-kendiadin` with following properties, 
+
+```bash
+
+Versioning                  : Disabled
+Server access logging       : Disabled
+Tagging                     : 0 Tags
+Object-level logging        : Disabled
+Default encryption          : Default
+CloudWatch request metrics  : Disabled
+Object lock                 : Disabled
+Block all public access     : unchecked
+```
+
+### STEP 2: Create a S3 as Static WebSite :
+
+ 1. Create Static WebSite / "www.[your sub-domain name]"
+ 
+  - Go to S3 service and create a bucket with sub-domain name: "www.[your sub-domain name]"
+  - Public Access "Enabled"
+  - Upload Files named "index.html" and "error.jpg"
+  - Permissions>>> Bucket Policy >>> Paste bucket Policy
+```bash
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "xxxxxxxx/*"
+        }
+    ]
+}
+```
+  - Properties>>> Set Static Web Site >>> Enable >>> Index document : index.html 
+   
+## PART 5 ---------------------------------->   GITHUB   <-----------------------------
+### STEP 1 Create new repo 
+- go on gitHub on browser -> login 
+- left-hand menu click `New` 
+- Repository name: aws-final-project
+- Public: checked as default 
+- click `Create repository`
+
+### STEP 2 **Copy files downloaded or cloned from Techproeducation repo on Github**
+- Create a file "teach files" and open terminal in the file
+- do:
+``` bash
+git clone https://github.com/techproeducation-batchs/AD279-AWS-DEVOPS.git
+```
+- go to -> AWS -> 35-AWS-Final Project (Project-6): `and you will see all files you need FOR FINAL PROJECT`
+
+### STEP 2 Push your files in your public repo
+- click your `aws-final-projec` and copy your https link from code
+- https like: https://github.com/your-user-name/aws-final-project.git 
+- go to your desktop and open `Terminal` in Desktop
+- Clone your repo on local:  (you have to copy your https link and paste)
+``` bash
+ git clone https://github.com/your-user-name/aws-final-project.git 
+ ```
+- You see your file on Desktop as like: aws-final-project
+- Open it and copy files from final project which given by teacher  in `35-AWS-Final Project (Project-6)` file
+- Open `Terminal` in aws-final-project and command next code:
+``` bash
+git add .
+git commit -m "Files for project added"
+git push
+``` 
+Now your files are ready on your remote public repo
+
+### STEP 3 Change your data (All data which must be changed are ready let's do it!)
+### STEP 3a
+- open your repo on gitHub 
+- go to `BlogDjango` -> src -> .env
+- click `edit` change: PASSWORD = your_rds_password
+- click `commit changes...` -> "password saved" -> click `commit`
+### STEP 3b
+- go to `cblog` -> settings.py -> click `edit this file` -> go to row: 85 
+
+you will see (enter your: NAME, USER, HOST):    
+```py
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'your_db_name', # database name in RDS is written here
+        'USER': 'admin', # database master username in RDS is written here 
+        'PASSWORD': config('PASSWORD'), # FinalProject2024!
+        'HOST': 'your_endpoint',  # database endpoint is written here
+        'PORT': '3306' # database port is written here
+    }
+```
+- then go to row: 147
+
+```py
+AWS_STORAGE_BUCKET_NAME = 'your_bucket_name_which_will_stor_your_post_data' # please enter your s3 bucket name
+```
+- click `commit changes...` -> "data for rds and s3" -> click `commit`
+
+- ---------------------Your repo is ready to use!
+
+
+## PART 6 ---------------------------------->  Create NAT Instance  <------------------------
+### STEP 1 Launch ec2
  create an instance from AMIs designed as NAT.
 
 - Go to EC2 Menu Using AWS Console
@@ -272,7 +405,7 @@ subnet: fp-subnet-public-1a
 - Select created Nat Instance on EC2 list
 - Tab Actions Menu ----> Networking ----> Change Source/Destination Check ---> stop, Disable
 
-# Configuring the Route Table
+### STEP 2 Configuring the Route Table
 
 - Go to Route Table and select "fp-private-rt"
 
@@ -283,7 +416,7 @@ Target ----> Instance ----> Nat Instance
 ```
 WARNING!!! ---> Please do first "NAT instance" for "Private Blog Web Page EC2".
 
-## Part 2 - Create Target Group
+## PART 7 ---------------------------------->  Create Target Group  <-----------------------
 
 - Go to `Target Groups` section under the Load Balancing part on left-hand menu and select `Target Group`
 
@@ -324,7 +457,8 @@ WARNING!!! ---> Please do first "NAT instance" for "Private Blog Web Page EC2".
 
 - Click `Create Target Group` button.
 
-## Part 3 - Create Application Load Balancer
+
+## PART 8 ---------------------------------->  Create Application Load Balancer  <-------------------
 
 Go to the Load Balancing section on left-hand menu and select `Load Balancers`.
 
@@ -377,21 +511,18 @@ Tags                        :
 
 
 
-# Create IAM role to reach S3 from "Private WEB EC2"
+
+## PART 9 ---------------------------------->  Create IAM roles  <--------------------------------
+### STEP 1 Create IAM role to reach S3 from "Private WEB EC2"
 
 - Go to IAM Service from AWS console and select roles on left hand pane
-
 - click create role
-
 Role ---> create role ---> AWS service ---> Use case EC2 ---> Next ---> Policy ---> "AmazonS3FullAccess" ---> Next 
-
 Role Name : pf-ec2role-for-s3
 Role description: my S3 Full Access for Endpoint
 click create button
 
-# STEP 1: Create IAM Role:
-
-Go to IAM page.
+### STEP 2: Create IAM Role for LAMBDA:
 
 - Go to `Roles` on the left hand menu and click `create role`.
 
@@ -402,12 +533,11 @@ Role Name : pf-lambdarole-for-s3
 click create button
 
 
-##  Launch Template Configuration
 
-- Launch Template Name
+## PART 10 ---------------------------------->  Launch Template Configuration  <-----------------------
 
-Launch template name            : fp-template
-Template version description    : fp-template
+- Launch template name            : fp-template
+- Template version description    : fp-template
 
 - Amazon Machine Image (AMI)
   Quick Start: 
@@ -437,7 +567,6 @@ User data
 
 ```bash
 #!/bin/bash
-apt update -y
 apt-get update -y
 apt-get install git -y
 apt-get install python3 -y
@@ -454,9 +583,11 @@ python3 manage.py makemigrations
 python3 manage.py migrate
 python3 manage.py runserver 0.0.0.0:80
 ```
-- click 'Create Launch Template'
+- click `Create Launch Template`
 
-### Part 5 - Create Auto Scaling Group (Create an Auto Scaling Group that keeps the target group in initial size)
+
+## PART 11 ---------------------------------->  Create Auto Scaling Group <----------------------------
+  note: Create an Auto Scaling Group that keeps the target group in initial size
 
 - EC2 AWS Management console, select Auto Scaling Group from the left-hand menu and then click Create Auto Scaling Group
 Name: fp-auto-scaling
@@ -510,10 +641,9 @@ Key     : Name
 Value:  : fp-auto-scaling
 Step 7: Review and create Auto Scaling Group.
 
-# Recommendation: You can check if your webpage is working.
+- `Recommendation`: You can check if your webpage is working using `ALB DNS name`
 
-## Part 7 - Create CloudFront Distribution
-
+## PART 12 ---------------------------------->  Create CloudFront Distribution  <-------------------------
 - Go to CloudFront service and click "Create a CloudFront Distribution"
 
 - Create Distribution :
@@ -539,33 +669,10 @@ Step 7: Review and create Auto Scaling Group.
 
 - When it is deployed, copy the "Domain name" of the distribution. 
 
-### STEP 3: Create a Static WebSite:
+- `Recommendation`: You can check if your webpage is working using `CloudFront DNS name`
 
- 1. Create Static WebSite / "www.[your sub-domain name]"
- 
-  - Go to S3 service and create a bucket with sub-domain name: "www.[your sub-domain name]"
-  - Public Access "Enabled"
-  - Upload Files named "index.html" and "error.jpg"
-  - Permissions>>> Bucket Policy >>> Paste bucket Policy
-```bash
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "PublicReadGetObject",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": "xxxxxxxx/*"
-        }
-    ]
-}
-```
-  - Properties>>> Set Static Web Site >>> Enable >>> Index document : index.html 
-   
 
-## Part 2 - Creating fail-over routing policies
-
+## PART 13 ---------------------------------->  Creating fail-over routing policies  <----------------------
 ### STEP 1 : Create health check for "N. Virginia" instance
 
 - Go to left hand pane on route_53 and click the Health check menu 
@@ -598,7 +705,7 @@ Get Notification   : None
 
 click create and wait that the status is unhealthy approximately after 40 seconds the instance healthcheck will turned into the "healthy" from "unhealthy"
 ```
-### Step 2: Create A record for  "N. Virginia" instance IP - Primary record
+### STEP 2: Create A record for  "N. Virginia" instance IP - Primary record
 
 - Got to the hosted zone and select the public hosted zone of our domain name
 - Click create record
@@ -617,9 +724,9 @@ Failover record type    : Primary
 Health check            : fp_healthcheck
 Record ID               : Failover Scenario-primary
 ```
-- Click create record
+- Click `Create record`
 
-### Step 3: Create A record for S3 website endpoint - Secondary record
+### STEP 3: Create A record for S3 website endpoint - Secondary record
 
 - Click create record
 - select "Failover" as a routing policy
@@ -636,13 +743,11 @@ Failover record type    : Secondary
 Health check            : keep it as is
 Record ID               : Failover Scenario-secondary
 ```
-- Click create record
+- Click `Create record`
 
+## PART 14 ---------------------------------->  Create a Lambda Function and Trigger Event   <---------------
 
-
-## Part 2 - Create a Lambda Function and Trigger Event
-
-# STEP 2: Create Lambda Function
+### STEP 1: Create Lambda Function
 
 - Go to Lambda Service on AWS Console
 
@@ -657,7 +762,7 @@ Record ID               : Failover Scenario-secondary
   Role: pf-lambdarole-for-s3
   click->create function
 
-# STEP 3: Setting Trigger Event
+### STEP 2: Setting Trigger Event
 
 - Go to Configuration sub-menu and click AddTrigger on Diagram  
 
@@ -668,7 +773,7 @@ Trigger Configuration : S3
 - Recursive invocation         : checked
 click `Add`
 
-# STEP 4: Create Function Code
+### STEP 4: Create Function Code
 
 - Go to the Function Code sub-menu and paste >>> >>>> code seen below:
 
@@ -700,7 +805,7 @@ def lambda_handler(event, context):
     return "Lambda success"
 ```
 
-- Click "DEPLOY" button
+- Click `DEPLOY` button
 
 
-### Congratulations!
+#### Congratulations!
